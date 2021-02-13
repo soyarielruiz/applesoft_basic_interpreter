@@ -12,6 +12,7 @@
   (cond
     (nil? n) nil
     (symbol? n) (str n)
+    (integer? n ) (srt n)
     (zero? n ) (str n)
     (and (> n 0) (< n 1)) (apply str (nthrest (seq (str n)) 1)) ;sacar esto
     (>= n 1) (str n)
@@ -25,8 +26,8 @@
     (nil? n) nil
     (symbol? n) (str n)
     (zero? n) (str n)
-    (>= n 1) (read-string (apply str (seq (str 0.50000))))
-    )
+    (>= n 1) (read-string (apply str (seq (str n))))
+  )
 )
 
 (def testVMap

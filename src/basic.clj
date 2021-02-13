@@ -655,6 +655,16 @@
 ; A PARTIR DE ESTE PUNTO HAY QUE IMPLEMENTAR LAS FUNCIONES DADAS ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;
+; Palabras reservadas a utilizar ;
+;;;;;;
+(def reserved_words
+  #{"LOAD" "SAVE" "INPUT" "PRINT" "?" "DATA" "READ" "REM" "RESTORE"
+    "CLEAR" "LET" "LIST" "NEW" "RUN" "END" "FOR" "TO" "NEXT" "STEP"
+    "GOSUB" "RETURN" "GOTO" "IF" "THEN" "ON" "ENV" "EXIT" "ATN"
+    "INT" "SIN" "LEN" "MID$" "ASC" "CHR$" "STR$" "OR" "AND"}
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; palabra-reservada?: predicado para determinar si un
 ; identificador es una palabra reservada, por ejemplo:
@@ -664,8 +674,17 @@
 ; false
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn palabra-reservada? [x]
-  )
+  (contains? reserved_words (clojure.string/upper-case x))
+)
 
+
+;;;;;;;;;
+; Simbolos reservados a utilizar ;
+;;;;;;
+(def reserved_symbols
+  #{"+" "-" "*" "/" "?" "^" "=" "<>" "<"
+    "<=" ">" ">=" }
+)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; operador?: predicado para determinar si un identificador es un
 ; operador, por ejemplo:
@@ -677,7 +696,8 @@
 ; false
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn operador? [x]
-  )
+  (contains? reserved_symbols x)
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; anular-invalidos: recibe una lista de simbolos y la retorna con
@@ -932,6 +952,13 @@
 (defn aridad [token]
   )
 
+;;;;;;
+; Parsear string a int
+;;;;;;
+(defn parse-int [s]
+  (Integer. (re-find  #"\d+" s ))
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; eliminar-cero-decimal: recibe un numero y lo retorna sin ceros
 ; decimales no significativos, por ejemplo:
@@ -945,8 +972,17 @@
 ; A
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn eliminar-cero-decimal [n]
+  (cond
+    (nil? n) nil
+    (symbol? n) (str n)
+    (integer? n) (parse-int n)
+    (zero? n) (str n)
+    (>= n 1) (read-string (apply str (seq (str n))))
+    (and (> n 0) (< n 1)) (Float/parseFloat (apply str (nthrest (seq (str n)) 1)))
   )
+)
 
+;(>= n 1) (if (integer? n) ((parse-int n)) (read-string (apply str (seq (str n)))) )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; eliminar-cero-entero: recibe un simbolo y lo retorna convertido
 ; en cadena, omitiendo para los numeros del intervalo (-1..1) el
@@ -971,7 +1007,8 @@
 ; "-.5"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn eliminar-cero-entero [n]
-  )
+
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Despues de cargarse el archivo, debe mostrarse el valor true
