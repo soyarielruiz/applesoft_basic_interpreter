@@ -6,50 +6,50 @@
 ; https://www.landsnail.com/a2ref.htm
 ; https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book.html
 
-(declare driver-loop)                     ; NO TOCAR
-(declare string-a-tokens)                 ; NO TOCAR
-(declare evaluar-linea)                   ; NO TOCAR
-(declare buscar-mensaje)                  ; NO TOCAR
-(declare seleccionar-destino-de-on)       ; NO TOCAR
-(declare leer-data)                       ; NO TOCAR
-(declare leer-con-enter)                  ; NO TOCAR
-(declare retornar-al-for)                 ; NO TOCAR
-(declare continuar-programa)              ; NO TOCAR
-(declare ejecutar-programa)               ; NO TOCAR
-(declare mostrar-listado)                 ; NO TOCAR
-(declare cargar-arch)                     ; NO TOCAR
-(declare grabar-arch)                     ; NO TOCAR
-(declare calcular-expresion)              ; NO TOCAR
-(declare desambiguar-mas-menos)           ; NO TOCAR
-(declare desambiguar-mid)                 ; NO TOCAR
-(declare shunting-yard)                   ; NO TOCAR
-(declare calcular-rpn)                    ; NO TOCAR
-(declare imprimir)                        ; NO TOCAR
-(declare desambiguar-comas)               ; NO TOCAR
+(declare driver-loop)                                       ; NO TOCAR
+(declare string-a-tokens)                                   ; NO TOCAR
+(declare evaluar-linea)                                     ; NO TOCAR
+(declare buscar-mensaje)                                    ; NO TOCAR
+(declare seleccionar-destino-de-on)                         ; NO TOCAR
+(declare leer-data)                                         ; NO TOCAR
+(declare leer-con-enter)                                    ; NO TOCAR
+(declare retornar-al-for)                                   ; NO TOCAR
+(declare continuar-programa)                                ; NO TOCAR
+(declare ejecutar-programa)                                 ; NO TOCAR
+(declare mostrar-listado)                                   ; NO TOCAR
+(declare cargar-arch)                                       ; NO TOCAR
+(declare grabar-arch)                                       ; NO TOCAR
+(declare calcular-expresion)                                ; NO TOCAR
+(declare desambiguar-mas-menos)                             ; NO TOCAR
+(declare desambiguar-mid)                                   ; NO TOCAR
+(declare shunting-yard)                                     ; NO TOCAR
+(declare calcular-rpn)                                      ; NO TOCAR
+(declare imprimir)                                          ; NO TOCAR
+(declare desambiguar-comas)                                 ; NO TOCAR
 
-(declare evaluar)                         ; COMPLETAR
-(declare aplicar)                         ; COMPLETAR
+(declare evaluar)                                           ; COMPLETAR
+(declare aplicar)                                           ; COMPLETAR
 
-(declare palabra-reservada?)              ; IMPLEMENTAR
-(declare operador?)                       ; IMPLEMENTAR
-(declare anular-invalidos)                ; IMPLEMENTAR
-(declare cargar-linea)                    ; IMPLEMENTAR
-(declare expandir-nexts)                  ; IMPLEMENTAR
-(declare dar-error)                       ; IMPLEMENTAR
-(declare variable-float?)                 ; IMPLEMENTAR
-(declare variable-integer?)               ; IMPLEMENTAR
-(declare variable-string?)                ; IMPLEMENTAR
-(declare contar-sentencias)               ; IMPLEMENTAR
-(declare buscar-lineas-restantes)         ; IMPLEMENTAR
-(declare continuar-linea)                 ; IMPLEMENTAR
-(declare extraer-data)                    ; IMPLEMENTAR
-(declare ejecutar-asignacion)             ; IMPLEMENTAR
-(declare preprocesar-expresion)           ; IMPLEMENTAR
-(declare desambiguar)                     ; IMPLEMENTAR
-(declare precedencia)                     ; IMPLEMENTAR
-(declare aridad)                          ; IMPLEMENTAR
-(declare eliminar-cero-decimal)           ; IMPLEMENTAR
-(declare eliminar-cero-entero)            ; IMPLEMENTAR
+(declare palabra-reservada?)                                ; IMPLEMENTAR
+(declare operador?)                                         ; IMPLEMENTAR
+(declare anular-invalidos)                                  ; IMPLEMENTAR
+(declare cargar-linea)                                      ; IMPLEMENTAR
+(declare expandir-nexts)                                    ; IMPLEMENTAR
+(declare dar-error)                                         ; IMPLEMENTAR
+(declare variable-float?)                                   ; IMPLEMENTAR
+(declare variable-integer?)                                 ; IMPLEMENTAR
+(declare variable-string?)                                  ; IMPLEMENTAR
+(declare contar-sentencias)                                 ; IMPLEMENTAR
+(declare buscar-lineas-restantes)                           ; IMPLEMENTAR
+(declare continuar-linea)                                   ; IMPLEMENTAR
+(declare extraer-data)                                      ; IMPLEMENTAR
+(declare ejecutar-asignacion)                               ; IMPLEMENTAR
+(declare preprocesar-expresion)                             ; IMPLEMENTAR
+(declare desambiguar)                                       ; IMPLEMENTAR
+(declare precedencia)                                       ; IMPLEMENTAR
+(declare aridad)                                            ; IMPLEMENTAR
+(declare eliminar-cero-decimal)                             ; IMPLEMENTAR
+(declare eliminar-cero-entero)                              ; IMPLEMENTAR
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; driver-loop: el REPL del interprete de Applesoft BASIC
@@ -73,7 +73,7 @@
    (println "                            JANUARY 1, 1983")
    (println "                 COPYRIGHT APPLE COMPUTER, INC. 1980,1982")
    (flush)
-   (driver-loop ['() [:ejecucion-inmediata 0] [] [] [] 0 {}]))  ; [(prog-mem)  [prog-ptrs]  [gosub-return-stack]  [for-next-stack]  [data-mem]  data-ptr  {var-mem}]
+   (driver-loop ['() [:ejecucion-inmediata 0] [] [] [] 0 {}])) ; [(prog-mem)  [prog-ptrs]  [gosub-return-stack]  [for-next-stack]  [data-mem]  data-ptr  {var-mem}]
   ([amb]
    (prn) (print "] ") (flush)
    (try (let [linea (string-a-tokens (read-line)), cabeza (first linea)]
@@ -168,7 +168,7 @@
 (defn seleccionar-destino-de-on
   ([destinos indice amb]
    (cond
-     (or (neg? indice) (> indice 255)) (do (dar-error 53 (amb 1)) nil)  ; Illegal quantity error
+     (or (neg? indice) (> indice 255)) (do (dar-error 53 (amb 1)) nil) ; Illegal quantity error
      (zero? indice) :omitir-restante
      :else (seleccionar-destino-de-on (if (= (last destinos) (symbol ",")) (concat destinos [0]) destinos) indice amb 1)))
   ([destinos indice amb contador]
@@ -178,7 +178,7 @@
      (= (first destinos) (symbol ",")) (recur (next destinos) indice amb (inc contador))
      (or (= (count destinos) 1)
          (and (> (count destinos) 1) (= (second destinos) (symbol ",")))) (recur (nnext destinos) indice amb (inc contador))
-     :else (do (dar-error 16 (amb 1)) nil)))  ; Syntax error
+     :else (do (dar-error 16 (amb 1)) nil)))                ; Syntax error
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -191,19 +191,19 @@
 (defn leer-data
   ([param-de-read amb]
    (cond
-     (= (first (amb 1)) :ejecucion-inmediata) (do (dar-error 15 (amb 1)) [nil amb])  ; Not direct command
-     (empty? param-de-read) (do (dar-error 16 (amb 1)) [nil amb])  ; Syntax error
+     (= (first (amb 1)) :ejecucion-inmediata) (do (dar-error 15 (amb 1)) [nil amb]) ; Not direct command
+     (empty? param-de-read) (do (dar-error 16 (amb 1)) [nil amb]) ; Syntax error
      :else (leer-data param-de-read (drop (amb 5) (amb 4)) amb)))
   ([variables entradas amb]
    (cond
      (empty? variables) [:sin-errores amb]
-     (empty? entradas) (do (dar-error 42 (amb 1)) [:error-parcial amb])  ; Out of data error
+     (empty? entradas) (do (dar-error 42 (amb 1)) [:error-parcial amb]) ; Out of data error
      :else (let [res (ejecutar-asignacion (list (first variables) '= (if (variable-string? (first variables)) (str (first entradas)) (if (= (first entradas) "") 0 (first entradas)))) amb)]
              (if (nil? res)
                [nil amb]
                (if (or (= (count (next variables)) 1)
                        (and (> (count (next variables)) 1) (not= (fnext variables) (symbol ","))))
-                 (do (dar-error 16 (amb 1)) [:error-parcial res])  ; Syntax error
+                 (do (dar-error 16 (amb 1)) [:error-parcial res]) ; Syntax error
                  (recur (nnext variables) (next entradas) (assoc res 5 (inc (res 5)))))))))
   )
 
@@ -220,18 +220,18 @@
   ([param-orig param-actualizados amb]
    (let [prim-arg (first param-actualizados), es-cadena (string? prim-arg)]
      (if (and es-cadena (not= (second param-actualizados) (symbol ";")))
-       (do (dar-error 16 (amb 1)) [nil amb])  ; Syntax error
+       (do (dar-error 16 (amb 1)) [nil amb])                ; Syntax error
        (do (if es-cadena
              (print prim-arg)
              (print "? "))
            (flush)
            (if (= (first (amb 1)) :ejecucion-inmediata)
-             (do (dar-error 100 (amb 1)) [nil amb])  ; Illegal direct error
+             (do (dar-error 100 (amb 1)) [nil amb])         ; Illegal direct error
              (let [variables (if es-cadena (nnext param-actualizados) param-actualizados),
                    valores (butlast (map clojure.string/trim (.split (apply str (.concat (read-line) ",.")) ","))),
                    entradas (map #(let [entr (try (clojure.edn/read-string %) (catch Exception e (str %)))] (if (number? entr) entr (clojure.string/upper-case (str %)))) valores)]
                (if (empty? variables)
-                 (do (dar-error 16 (amb 1)) [nil amb])  ; Syntax error
+                 (do (dar-error 16 (amb 1)) [nil amb])      ; Syntax error
                  (leer-con-enter variables entradas param-orig param-actualizados amb amb))))))))
   ([variables entradas param-orig param-actualizados amb-orig amb-actualizado]
    (cond
@@ -244,7 +244,7 @@
                [nil amb-actualizado]
                (if (or (= (count (next variables)) 1)
                        (and (> (count (next variables)) 1) (not= (fnext variables) (symbol ","))))
-                 (do (dar-error 16 (amb-actualizado 1)) [:error-parcial res])  ; Syntax error
+                 (do (dar-error 16 (amb-actualizado 1)) [:error-parcial res]) ; Syntax error
                  (recur (nnext variables) (next entradas) param-orig param-actualizados amb-orig res))))))
   )
 
@@ -256,7 +256,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn retornar-al-for [amb var-next]
   (if (empty? (amb 3))
-    (do (dar-error 0 (amb 1)) [nil amb])  ; Next without for error
+    (do (dar-error 0 (amb 1)) [nil amb])                    ; Next without for error
     (let [datos-for (peek (amb 3)),
           var-for (nth datos-for 0),
           valor-final (nth datos-for 1),
@@ -287,16 +287,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn ejecutar-programa
   ([amb]
-   (let [ini [(amb 0) (amb 1) [] [] (vec (extraer-data (amb 0))) 0 {}]]  ; [(prog-mem)  [prog-ptrs]  [gosub-return-stack]  [for-next-stack]  [data-mem]  data-ptr  {var-mem}]
+   (let [ini [(amb 0) (amb 1) [] [] (vec (extraer-data (amb 0))) 0 {}]] ; [(prog-mem)  [prog-ptrs]  [gosub-return-stack]  [for-next-stack]  [data-mem]  data-ptr  {var-mem}]
      (ejecutar-programa ini (buscar-lineas-restantes ini))))
   ([amb prg]
    (if (or (nil? prg) (= (first (amb 1)) :ejecucion-inmediata))
      [:sin-errores amb]
      (let [antes (assoc amb 1 [(ffirst prg) (second (amb 1))]), res (evaluar-linea (nfirst prg) antes), nuevo-amb (second res)]
-       (cond (nil? (first res)) [nil amb]   ; hubo error total
-             (= (first res) :error-parcial) [nil (second res)]   ; hubo error parcial
+       (cond (nil? (first res)) [nil amb]                   ; hubo error total
+             (= (first res) :error-parcial) [nil (second res)] ; hubo error parcial
              :else (let [proximo (if (and (= (first (antes 1)) (first (nuevo-amb 1))) (not= (first res) :for-inconcluso))
-                                   (next prg)   ; no hubo quiebre de secuencia
+                                   (next prg)               ; no hubo quiebre de secuencia
                                    (buscar-lineas-restantes nuevo-amb)),
                          nueva-posic (if (nil? proximo) (nuevo-amb 1) [(ffirst proximo) (count (expandir-nexts (nfirst proximo)))])]
                      (recur (assoc nuevo-amb 1 nueva-posic) proximo))))))
@@ -336,7 +336,7 @@
 (defn cargar-arch [nom nro-linea]
   (if (.exists (clojure.java.io/file nom))
     (remove empty? (with-open [rdr (clojure.java.io/reader nom)] (doall (map string-a-tokens (line-seq rdr)))))
-    (dar-error 6 nro-linea))  ; File not found
+    (dar-error 6 nro-linea))                                ; File not found
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -451,13 +451,13 @@
                   (cons resu (drop ari pila)))))
             [] tokens)]
       (if (> (count resu-redu) 1)
-        (dar-error 16 nro-linea)  ; Syntax error
+        (dar-error 16 nro-linea)                            ; Syntax error
         (first resu-redu)))
     (catch NumberFormatException e 0)
-    (catch ClassCastException e (dar-error 163 nro-linea)) ; Type mismatch error
+    (catch ClassCastException e (dar-error 163 nro-linea))  ; Type mismatch error
     (catch UnsupportedOperationException e (dar-error 163 nro-linea)) ; Type mismatch error
-    (catch IllegalArgumentException e (dar-error 69 nro-linea))  ; Overflow error
-    (catch Exception e (dar-error 16 nro-linea)))  ; Syntax error
+    (catch IllegalArgumentException e (dar-error 69 nro-linea)) ; Overflow error
+    (catch Exception e (dar-error 16 nro-linea)))           ; Syntax error
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -482,14 +482,14 @@
                  (do (print resu) (flush) (recur [(next expresiones) amb])))))))
   ([lista-expr amb]
    (let [
-           nueva (cons (conj [] (first lista-expr)) (rest lista-expr)),
-           variable? #(or (variable-integer? %) (variable-float? %) (variable-string? %)),
-           funcion? #(and (> (aridad %) 0) (not (operador? %))),
-           interc (reduce #(if (and (or (number? (last %1)) (string? (last %1)) (variable? (last %1)) (= (symbol ")") (last %1)))
-                                    (or (number? %2) (string? %2) (variable? %2) (funcion? %2) (= (symbol "(") %2)))
-                             (conj (conj %1 (symbol ";")) %2) (conj %1 %2)) nueva),
-           ex (partition-by #(= % (symbol ",t")) (desambiguar-comas interc)),
-           expresiones (apply concat (map #(partition-by (fn [x] (= x (symbol ";"))) %) ex))
+         nueva (cons (conj [] (first lista-expr)) (rest lista-expr)),
+         variable? #(or (variable-integer? %) (variable-float? %) (variable-string? %)),
+         funcion? #(and (> (aridad %) 0) (not (operador? %))),
+         interc (reduce #(if (and (or (number? (last %1)) (string? (last %1)) (variable? (last %1)) (= (symbol ")") (last %1)))
+                                  (or (number? %2) (string? %2) (variable? %2) (funcion? %2) (= (symbol "(") %2)))
+                           (conj (conj %1 (symbol ";")) %2) (conj %1 %2)) nueva),
+         ex (partition-by #(= % (symbol ",t")) (desambiguar-comas interc)),
+         expresiones (apply concat (map #(partition-by (fn [x] (= x (symbol ";"))) %) ex))
          ]
      (imprimir [expresiones amb])))
   )
@@ -526,7 +526,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn evaluar [sentencia amb]
   (if (or (contains? (set sentencia) nil) (and (palabra-reservada? (first sentencia)) (= (second sentencia) '=)))
-    (do (dar-error 16 (amb 1)) [nil amb])  ; Syntax error
+    (do (dar-error 16 (amb 1)) [nil amb])                   ; Syntax error
     (case (first sentencia)
       PRINT (let [args (next sentencia), resu (imprimir args amb)]
               (if (and (nil? resu) (some? args))
@@ -536,24 +536,24 @@
              (let [nuevo-amb (cargar-arch (apply str (next sentencia)) (amb 1))]
                (if (nil? nuevo-amb)
                  [nil amb]
-                 [:sin-errores [nuevo-amb [:ejecucion-inmediata 0] [] [] [] 0 {}]]))  ; [(prog-mem)  [prog-ptrs]  [gosub-return-stack]  [for-next-stack]  [data-mem]  data-ptr  {var-mem}]
-             (do (dar-error 200 (amb 1)) [nil amb]))  ; Load within program error
+                 [:sin-errores [nuevo-amb [:ejecucion-inmediata 0] [] [] [] 0 {}]])) ; [(prog-mem)  [prog-ptrs]  [gosub-return-stack]  [for-next-stack]  [data-mem]  data-ptr  {var-mem}]
+             (do (dar-error 200 (amb 1)) [nil amb]))        ; Load within program error
       SAVE (if (= (first (amb 1)) :ejecucion-inmediata)
              (let [resu (grabar-arch (apply str (next sentencia)) amb)]
                (if (nil? resu)
                  [nil amb]
                  [:sin-errores amb]))
-             (do (dar-error 201 (amb 1)) [nil amb]))  ; Save within program error
+             (do (dar-error 201 (amb 1)) [nil amb]))        ; Save within program error
       REM [:omitir-restante amb]
-      NEW [:sin-errores ['() [:ejecucion-inmediata 0] [] [] [] 0 {}]]  ; [(prog-mem)  [prog-ptrs]  [gosub-return-stack]  [for-next-stack]  [data-mem]  data-ptr  {var-mem}]
+      NEW [:sin-errores ['() [:ejecucion-inmediata 0] [] [] [] 0 {}]] ; [(prog-mem)  [prog-ptrs]  [gosub-return-stack]  [for-next-stack]  [data-mem]  data-ptr  {var-mem}]
       RUN (cond
-            (empty? (amb 0)) [:sin-errores amb]  ; no hay programa
-            (= (count sentencia) 1) (ejecutar-programa (assoc amb 1 [(ffirst (amb 0)) (count (expandir-nexts (nfirst (amb 0))))]))  ; no hay argumentos
-            (= (count (next sentencia)) 1) (ejecutar-programa (assoc amb 1 [(fnext sentencia) (contar-sentencias (fnext sentencia) amb)]))  ; hay solo un argumento
-            :else (do (dar-error 16 (amb 1)) [nil amb]))  ; Syntax error
+            (empty? (amb 0)) [:sin-errores amb]             ; no hay programa
+            (= (count sentencia) 1) (ejecutar-programa (assoc amb 1 [(ffirst (amb 0)) (count (expandir-nexts (nfirst (amb 0))))])) ; no hay argumentos
+            (= (count (next sentencia)) 1) (ejecutar-programa (assoc amb 1 [(fnext sentencia) (contar-sentencias (fnext sentencia) amb)])) ; hay solo un argumento
+            :else (do (dar-error 16 (amb 1)) [nil amb]))    ; Syntax error
       GOTO (let [num-linea (if (some? (second sentencia)) (second sentencia) 0)]
              (if (not (contains? (into (hash-set) (map first (amb 0))) num-linea))
-               (do (dar-error 90 (amb 1)) [nil amb])  ; Undef'd statement error
+               (do (dar-error 90 (amb 1)) [nil amb])        ; Undef'd statement error
                (let [nuevo-amb (assoc amb 1 [num-linea (contar-sentencias num-linea amb)])]
                  (if (= (first (amb 1)) :ejecucion-inmediata)
                    (continuar-programa nuevo-amb)
@@ -566,7 +566,7 @@
                                  (= (first resto-if) 'THEN) (if (number? (second resto-if))
                                                               (cons 'GOTO (next resto-if))
                                                               (next resto-if))
-                                 :else (do (dar-error 16 (amb 1)) nil)),  ; Syntax error
+                                 :else (do (dar-error 16 (amb 1)) nil)), ; Syntax error
                resu (calcular-expresion condicion-de-if amb)]
            (if (zero? resu)
              [:omitir-restante amb]
@@ -582,7 +582,7 @@
              :else (recur (list sentencia-de-on destino-de-on) amb)))
       GOSUB (let [num-linea (if (some? (second sentencia)) (second sentencia) 0)]
               (if (not (contains? (into (hash-set) (map first (amb 0))) num-linea))
-                (do (dar-error 90 (amb 1)) [nil amb])  ; Undef'd statement error
+                (do (dar-error 90 (amb 1)) [nil amb])       ; Undef'd statement error
                 (let [pos-actual (amb 1),
                       nuevo-amb (assoc (assoc amb 1 [num-linea (contar-sentencias num-linea amb)]) 2 (conj (amb 2) pos-actual))]
                   (if (= (first (amb 1)) :ejecucion-inmediata)
@@ -592,7 +592,7 @@
       FOR (let [separados (partition-by #(contains? #{"TO" "STEP"} (str %)) (next sentencia))]
             (if (not (or (and (= (count separados) 3) (variable-float? (ffirst separados)) (= (nth separados 1) '(TO)))
                          (and (= (count separados) 5) (variable-float? (ffirst separados)) (= (nth separados 1) '(TO)) (= (nth separados 3) '(STEP)))))
-              (do (dar-error 16 (amb 1)) [nil amb])  ; Syntax error
+              (do (dar-error 16 (amb 1)) [nil amb])         ; Syntax error
               (let [valor-final (calcular-expresion (nth separados 2) amb),
                     valor-step (if (= (count separados) 5) (calcular-expresion (nth separados 4) amb) 1)]
                 (if (or (nil? valor-final) (nil? valor-step))
@@ -600,13 +600,13 @@
                   (recur (first separados) (assoc amb 3 (conj (amb 3) [(ffirst separados) valor-final valor-step (amb 1)])))))))
       NEXT (if (<= (count (next sentencia)) 1)
              (retornar-al-for amb (fnext sentencia))
-             (do (dar-error 16 (amb 1)) [nil amb]))  ; Syntax error
+             (do (dar-error 16 (amb 1)) [nil amb]))         ; Syntax error
       (if (= (second sentencia) '=)
         (let [resu (ejecutar-asignacion sentencia amb)]
           (if (nil? resu)
             [nil amb]
             [:sin-errores resu]))
-        (do (dar-error 16 (amb 1)) [nil amb]))))  ; Syntax error
+        (do (dar-error 16 (amb 1)) [nil amb]))))            ; Syntax error
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -617,7 +617,7 @@
 (defn aplicar
   ([operador operando nro-linea]
    (if (nil? operando)
-     (dar-error 16 nro-linea)  ; Syntax error
+     (dar-error 16 nro-linea)                               ; Syntax error
      (case operador
        -u (- operando)
        LEN (count operando)
@@ -625,7 +625,7 @@
        CHR$ (if (or (< operando 0) (> operando 255)) (dar-error 53 nro-linea) (str (char operando)))))) ; Illegal quantity error
   ([operador operando1 operando2 nro-linea]
    (if (or (nil? operando1) (nil? operando2))
-     (dar-error 16 nro-linea)  ; Syntax error
+     (dar-error 16 nro-linea)                               ; Syntax error
      (if (= operador (symbol "^"))
        (Math/pow operando1 operando2)
        (case operador
@@ -635,17 +635,17 @@
          + (if (and (string? operando1) (string? operando2))
              (str operando1 operando2)
              (+ operando1 operando2))
-         / (if (= operando2 0) (dar-error 133 nro-linea) (/ operando1 operando2))  ; Division by zero error
+         / (if (= operando2 0) (dar-error 133 nro-linea) (/ operando1 operando2)) ; Division by zero error
          AND (let [op1 (+ 0 operando1), op2 (+ 0 operando2)] (if (and (not= op1 0) (not= op2 0)) 1 0))
          MID$ (if (< operando2 1)
-                (dar-error 53 nro-linea)  ; Illegal quantity error
+                (dar-error 53 nro-linea)                    ; Illegal quantity error
                 (let [ini (dec operando2)] (if (>= ini (count operando1)) "" (subs operando1 ini))))))))
   ([operador operando1 operando2 operando3 nro-linea]
-   (if (or (nil? operando1) (nil? operando2) (nil? operando3)) (dar-error 16 nro-linea)  ; Syntax error
+   (if (or (nil? operando1) (nil? operando2) (nil? operando3)) (dar-error 16 nro-linea) ; Syntax error
                                                                (case operador
                                                                  MID3$ (let [tam (count operando1), ini (dec operando2), fin (+ (dec operando2) operando3)]
                                                                          (cond
-                                                                           (or (< operando2 1) (< operando3 0)) (dar-error 53 nro-linea)  ; Illegal quantity error
+                                                                           (or (< operando2 1) (< operando3 0)) (dar-error 53 nro-linea) ; Illegal quantity error
                                                                            (>= ini tam) ""
                                                                            (>= fin tam) (subs operando1 ini tam)
                                                                            :else (subs operando1 ini fin))))))
@@ -663,7 +663,14 @@
     "CLEAR" "LET" "LIST" "NEW" "RUN" "END" "FOR" "TO" "NEXT" "STEP"
     "GOSUB" "RETURN" "GOTO" "IF" "THEN" "ON" "ENV" "EXIT" "ATN"
     "INT" "SIN" "LEN" "MID$" "ASC" "CHR$" "STR$" "OR" "AND"}
-)
+  )
+
+;;;;;;
+; Parsear string a int
+;;;;;;
+(defn parse-int [number-string]
+  (try (Integer/parseInt number-string)
+       (catch Exception e nil)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; palabra-reservada?: predicado para determinar si un
@@ -675,7 +682,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn palabra-reservada? [x]
   (contains? reserved_words (clojure.string/upper-case x))
-)
+  )
 
 
 ;;;;;;;;;
@@ -683,7 +690,7 @@
 ;;;;;;
 (def reserved_symbols
   #{"+" "-" "*" "/" "?" "^" "=" "<>" "<"
-    "<=" ">" ">=" }
+    "<=" ">" ">="}
 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; operador?: predicado para determinar si un identificador es un
@@ -705,8 +712,30 @@
 ; user=> (anular-invalidos '(IF X & * Y < 12 THEN LET ! X = 0))
 ; (IF X nil * Y < 12 THEN LET nil X = 0)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn anular-invalidos [sentencia]
+;(defn invalido [palabra]
+;  (
+;    if (and
+;         (= 1 (count palabra))
+;         (not (operador? palabra))
+;         (not (palabra-reservada? palabra))
+;         (not (Character/isLetter (first (seq palabra))))
+;         (nil? (parse-int (str palabra)))
+;         )
+;    (str "nil")
+;    (str palabra))
+;)
+
+(defn invalido [palabra]
+  (
+    cond (= palabra '&) nil
+        (= palabra '!) nil
+        :else palabra
   )
+)
+
+(defn anular-invalidos [sentencia]
+  (map invalido sentencia)
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; cargar-linea: recibe una linea de codigo y un ambiente y retorna
@@ -720,8 +749,20 @@
 ; user=> (cargar-linea '(15 (X = X - 1)) ['((10 (PRINT X)) (15 (X = X + 1)) (20 (X = 100))) [:ejecucion-inmediata 0] [] [] [] 0 {}])
 ; [((10 (PRINT X)) (15 (X = X - 1)) (20 (X = 100))) [:ejecucion-inmediata 0] [] [] [] 0 {}]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn filtrar-existente [linea amb]
+  (filter (fn [x] (distinct? (first x) (first linea))) (first amb))
+)
+
 (defn cargar-linea [linea amb]
+  (assoc amb 0
+    (sort-by first
+      (into
+        (filtrar-existente linea amb)
+        (list linea)
+      )
+    )
   )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; expandir-nexts: recibe una lista de sentencias y la devuelve con
@@ -734,9 +775,30 @@
 ; user=> (expandir-nexts n)
 ; ((PRINT 1) (NEXT A) (NEXT B))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn expandir-nexts [n]
+(defn desagrupar [lista]
+  (remove nil?
+    (map
+      (fn [word]
+        (if
+          (not= word (symbol ",")) (list 'NEXT word))
+      ) (rest lista)
+    )
   )
+)
 
+(defn expandir-nexts [n]
+  (apply concat
+    (map (fn [value]
+      (cond
+        (not= (first value) 'NEXT) (list value)
+        (and (= (first value) 'NEXT) (= (count value) 2)) (list value)
+        (and (= (first value) 'NEXT) (> (count value) 2)) (desagrupar value)
+        :else value
+      )
+      ) n
+    )
+  )
+)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; dar-error: recibe un error (codigo o mensaje) y el puntero de
 ; programa, muestra el error correspondiente y retorna nil, por
@@ -754,8 +816,22 @@
 ;
 ; ?ERROR DISK FULL IN 100nil
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn dar-error [cod prog-ptrs]
+(defn es-una-posicion? [value]
+  (if
+    (integer? (parse-int (str value)))
+    (str " IN " value)
+    (str "")
   )
+)
+
+(defn dar-error [cod prog-ptrs]
+  (symbol
+    (str (buscar-mensaje cod)
+         (es-una-posicion? (first prog-ptrs))
+         "nil"
+    )
+  )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; variable-float?: predicado para determinar si un identificador
@@ -768,7 +844,12 @@
 ; false
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn variable-float? [x]
+  (cond
+    (= "%" (str (last (seq (str x))))) false
+    (= "$" (str (last (seq (str x))))) false
+    :else true
   )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; variable-integer?: predicado para determinar si un identificador
@@ -781,7 +862,11 @@
 ; false
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn variable-integer? [x]
-  )
+  (cond
+    (= "%" (str (last (seq (str x))))) true
+    :else false
+    )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; variable-string?: predicado para determinar si un identificador
@@ -794,7 +879,11 @@
 ; false
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn variable-string? [x]
+  (cond
+    (= "$" (str (last (seq (str x))))) true
+    :else false
   )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; contar-sentencias: recibe un numero de linea y un ambiente y
@@ -807,8 +896,21 @@
 ; user=> (contar-sentencias 20 [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [10 1] [] [] [] 0 {}])
 ; 2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn contar-sentencias [nro-linea amb]
+(defn count-with-next [amb]
+  (if
+    (= (first (second (first amb))) 'NEXT) (count (desagrupar (second (first amb))) )
+    (- (count (first amb)) 1)
   )
+)
+
+(defn contar-sentencias [nro-linea amb]
+  (count-with-next
+   (filter
+     (fn [x] (= (first x) nro-linea))
+     (first amb)
+     )
+   )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; buscar-lineas-restantes: recibe un ambiente y retorna la
@@ -842,11 +944,30 @@
 ; user=> (buscar-lineas-restantes [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [25 0] [] [] [] 0 {}])
 ; nil
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn devolver-lineas [pos cant prg]
+  (cond
+    (pos? cant)
+      (map (fn[value]
+       (if
+         (= pos (first value)) (list pos (drop (- (count value) cant) value))
+          value
+        )
+      ) prg
+    )
+    :else (filter (fn [x] (= pos (first x))) prg)
+  )
+)
+
 (defn buscar-lineas-restantes
   ([amb] (buscar-lineas-restantes (amb 1) (amb 0)))
   ([act prg]
+   (cond
+    (or (empty? prg) (not (number? (first act)))) nil
+    (zero? (second act)) (list (list (first act)) (filter (fn [x] (distinct? (first act) (first x))) prg))
+    :else (devolver-lineas (first act) (second act) prg)
    )
   )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; continuar-linea: implementa la sentencia RETURN, retornando una
@@ -859,8 +980,20 @@
 ; user=> (continuar-linea [(list '(10 (PRINT X)) '(15 (GOSUB 100) (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [20 3] [[15 2]] [] [] 0 {}])
 ; [:omitir-restante [((10 (PRINT X)) (15 (GOSUB 100) (X = X + 1)) (20 (NEXT I , J))) [15 1] [] [] [] 0 {}]]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;(map (fn [value]
+;   (cond
+;     (not= (first (second value)) 'GOSUB) (first value)
+;     (and (= (first (second value)) 'NEXT) (> (count (second value)) 2)) (desagrupar value)
+;     :else value
+;     )
+;   ) (first amb)
+;)
 (defn continuar-linea [amb]
+  (if
+    (empty? (nth amb 2)) (symbol (str "?RETURN WITHOUT GOSUB ERROR IN " (first (second amb)) (assoc amb 0 'nil) ))
+    (str "else")
   )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; extraer-data: recibe la representación intermedia de un programa
@@ -952,13 +1085,6 @@
 (defn aridad [token]
   )
 
-;;;;;;
-; Parsear string a int
-;;;;;;
-(defn parse-int [s]
-  (Integer. (re-find  #"\d+" s ))
-)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; eliminar-cero-decimal: recibe un numero y lo retorna sin ceros
 ; decimales no significativos, por ejemplo:
@@ -979,8 +1105,8 @@
     (zero? n) (str n)
     (>= n 1) (read-string (apply str (seq (str n))))
     (and (> n 0) (< n 1)) (Float/parseFloat (apply str (nthrest (seq (str n)) 1)))
+    )
   )
-)
 
 ;(>= n 1) (if (integer? n) ((parse-int n)) (read-string (apply str (seq (str n)))) )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1008,7 +1134,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn eliminar-cero-entero [n]
 
-)
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Despues de cargarse el archivo, debe mostrarse el valor true
