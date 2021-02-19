@@ -656,21 +656,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;
-; Palabras reservadas a utilizar ;
-;;;;;;
-(def reserved_words
-  #{"LOAD" "SAVE" "INPUT" "PRINT" "?" "DATA" "READ" "REM" "RESTORE"
-    "CLEAR" "LET" "LIST" "NEW" "RUN" "END" "FOR" "TO" "NEXT" "STEP"
-    "GOSUB" "RETURN" "GOTO" "IF" "THEN" "ON" "ENV" "EXIT" "ATN"
-    "INT" "SIN" "LEN" "MID$" "ASC" "CHR$" "STR$" "OR" "AND"}
-  )
-
-;;;;;;
 ; Parsear string a int
 ;;;;;;
 (defn parse-int [number-string]
   (try (Integer/parseInt number-string)
        (catch Exception e nil)))
+
+;;;;;;
+; Palabras reservadas a utilizar ;
+;;;;;;
+(def reserved_words
+  #{"LOAD" "SAVE" "INPUT" "PRINT" "DATA" "READ" "REM" "RESTORE"
+    "CLEAR" "LET" "LIST" "NEW" "RUN" "END" "FOR" "TO" "NEXT" "STEP"
+    "GOSUB" "RETURN" "GOTO" "IF" "THEN" "ON" "ENV" "EXIT" "ATN"
+    "INT" "SIN" "LEN" "MID$" "MID3$" "ASC" "CHR$" "STR$" "OR" "AND"}
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; palabra-reservada?: predicado para determinar si un
@@ -682,7 +682,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn palabra-reservada? [x]
   (contains? reserved_words (clojure.string/upper-case x))
-  )
+)
 
 
 ;;;;;;;;;
@@ -690,7 +690,7 @@
 ;;;;;;
 (def reserved_symbols
   #{"+" "-" "*" "/" "?" "^" "=" "<>" "<"
-    "<=" ">" ">="}
+    "<=" ">" ">=" "OR" "AND"}
 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; operador?: predicado para determinar si un identificador es un
@@ -825,10 +825,9 @@
 )
 
 (defn dar-error [cod prog-ptrs]
-  (symbol
+  (print
     (str (buscar-mensaje cod)
          (es-una-posicion? (first prog-ptrs))
-         "nil"
     )
   )
 )
@@ -927,8 +926,6 @@
 ; ((10 (PRINT Y)) (15 (X = X + 1)) (20 (NEXT I , J)))
 ; user=> (buscar-lineas-restantes [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [10 0] [] [] [] 0 {}])
 ; ((10) (15 (X = X + 1)) (20 (NEXT I , J)))
-; user=> (buscar-lineas-restantes [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [15 1] [] [] [] 0 {}])
-; ((15 (X = X + 1)) (20 (NEXT I , J)))
 ; user=> (buscar-lineas-restantes [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [15 0] [] [] [] 0 {}])
 ; ((15) (20 (NEXT I , J)))
 ; user=> (buscar-lineas-restantes [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [20 3] [] [] [] 0 {}])
@@ -944,17 +941,20 @@
 ; user=> (buscar-lineas-restantes [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [25 0] [] [] [] 0 {}])
 ; nil
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn devolver-lineas [pos cant prg]
-  (cond
-    (pos? cant)
-      (map (fn[value]
-       (if
-         (= pos (first value)) (list pos (drop (- (count value) cant) value))
-          value
-        )
-      ) prg
-    )
-    :else (filter (fn [x] (= pos (first x))) prg)
+(defn devolver-si-existe [posicion cant linea]
+  (print linea)
+  (concat (list posicion) (drop (- (count (expandir-nexts (rest linea))) cant) (expandir-nexts (rest linea))) )
+    ;(= (first (nth linea 1)) 'NEXT) (expandir-nexts linea)
+)
+
+
+(defn devolver-lineas [posicion cant prg]
+  (reduce (fn[lista value]
+     (cond
+       (= posicion (first value)) (list (concat lista (devolver-si-existe posicion cant value)))
+       (< posicion (first value)) (concat lista value)
+      )
+    ) #(conj % ()) prg
   )
 )
 
@@ -963,7 +963,8 @@
   ([act prg]
    (cond
     (or (empty? prg) (not (number? (first act)))) nil
-    (zero? (second act)) (list (list (first act)) (filter (fn [x] (distinct? (first act) (first x))) prg))
+    ;(>= (second act)) (concat (list (list (first act))) (filter (fn [x] (< (first act) (first x))) prg))
+    (and (empty? prg) (every? true ((fn [value] (distinct? (first act) (first value))) prg) )) nil
     :else (devolver-lineas (first act) (second act) prg)
    )
   )
@@ -988,10 +989,15 @@
 ;     )
 ;   ) (first amb)
 ;)
+(defn imprimir-texto [posicion amb]
+  (print "?RETURN WITHOUT GOSUB ERROR IN" posicion)
+  (assoc ['nil] 1 amb)
+)
+
 (defn continuar-linea [amb]
-  (if
-    (empty? (nth amb 2)) (symbol (str "?RETURN WITHOUT GOSUB ERROR IN " (first (second amb)) (assoc amb 0 'nil) ))
-    (str "else")
+  (cond
+    (empty? (nth amb 2)) (imprimir-texto (first (second amb)) amb)
+    :else [:omitir-restante amb]
   )
 )
 
@@ -1066,7 +1072,26 @@
 ; 9
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn precedencia [token]
+  (cond
+    (or (= 'OR token) (= "OR" token)) 1
+    (or (= 'AND token) (= "AND" token)) 2
+    (or (= 'NOT token) (= "NOT" token)) 3
+    (or (= '= token) (= "=" token)) 4
+    (or (= '<> token) (= "<>" token)) 4
+    (or (= '< token) (= "<" token)) 4
+    (or (= '<= token) (= "<=" token)) 4
+    (or (= '>= token) (= ">=" token)) 4
+    (or (= '> token) (= ">" token)) 4
+    (or (= '+ token) (= "+" token)) 5
+    (or (= '- token) (= "-" token)) 5
+    (or (= '* token) (= "*" token)) 6
+    (or (= '/ token) (= "/" token)) 6
+    (or (= '-u token) (= "-u" token)) 7
+    (or (= (symbol "^") token) (= "^" token)) 8
+    (or (palabra-reservada? token ) (or((= '? token) (= "?" token) ))) 9
+    :else 0 ;; sino existe la tomo como la más baja para que no la tenga en cuenta
   )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; aridad: recibe un token y retorna el valor de su aridad, por
@@ -1083,7 +1108,38 @@
 ; 3
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn aridad [token]
+  (cond
+    (or (= 'OR token) (= "OR" token)) 2
+    (or (= 'AND token) (= "AND" token)) 2
+    (or (= 'NOT token) (= "NOT" token)) 1
+    (or (= '= token) (= "=" token)) 2
+    (or (= '<> token) (= "<>" token)) 2
+    (or (= '< token) (= "<" token)) 2
+    (or (= '<= token) (= "<=" token)) 2
+    (or (= '>= token) (= ">=" token)) 2
+    (or (= '> token) (= ">" token)) 2
+    (or (= '+ token) (= "+" token)) 2
+    (or (= '- token) (= "-" token)) 2
+    (or (= '* token) (= "*" token)) 2
+    (or (= '/ token) (= "/" token)) 2
+    (or (= '-u token) (= "-u" token)) 1
+    (or (= (symbol "^") token) (= "^" token)) 2
+    (or (= 'LOAD token) (= "LOAD" token)) 1
+    (or (= 'SAVE token) (= "SAVE" token)) 1
+    (or (= 'INPUT token) (= "INPUT" token)) 0
+    (or (= 'PRINT token) (= "PRINT" token)) 0
+    (or (= 'DATA token) (= "DATA" token)) 0
+    (or (= 'READ token) (= "READ" token)) 0
+    (or (= 'REM token) (= "REM" token)) 1
+    (or (= 'LET token) (= "LET" token)) 1
+    (or (= 'CLEAR token) (= "CLEAR" token)) 0
+    (or (= 'CLEAR token) (= "CLEAR" token)) 0
+    (or (= 'CLEAR token) (= "CLEAR" token)) 0
+    (or (= 'CLEAR token) (= "CLEAR" token)) 0
+    (or (= 'CLEAR token) (= "CLEAR" token)) 0
+    :else 0 ;; sino existe la tomo como la más baja para que no la tenga en cuenta
   )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; eliminar-cero-decimal: recibe un numero y lo retorna sin ceros
