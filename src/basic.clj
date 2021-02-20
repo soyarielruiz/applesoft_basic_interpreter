@@ -942,17 +942,14 @@
 ; nil
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn devolver-si-existe [posicion cant linea]
-  (print linea)
   (concat (list posicion) (drop (- (count (expandir-nexts (rest linea))) cant) (expandir-nexts (rest linea))) )
-    ;(= (first (nth linea 1)) 'NEXT) (expandir-nexts linea)
 )
-
 
 (defn devolver-lineas [posicion cant prg]
   (reduce (fn[lista value]
      (cond
-       (= posicion (first value)) (list (concat lista (devolver-si-existe posicion cant value)))
-       (< posicion (first value)) (concat lista value)
+       (= posicion (first value)) (list (devolver-si-existe posicion cant value))
+       (< posicion (first value)) (concat lista (list value))
       )
     ) #(conj % ()) prg
   )
@@ -963,7 +960,6 @@
   ([act prg]
    (cond
     (or (empty? prg) (not (number? (first act)))) nil
-    ;(>= (second act)) (concat (list (list (first act))) (filter (fn [x] (< (first act) (first x))) prg))
     (and (empty? prg) (every? true ((fn [value] (distinct? (first act) (first value))) prg) )) nil
     :else (devolver-lineas (first act) (second act) prg)
    )
