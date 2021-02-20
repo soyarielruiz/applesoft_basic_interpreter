@@ -777,8 +777,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn desagrupar [lista]
   (remove nil?
-    (map
-      (fn [word]
+    (map (fn [word]
         (if
           (not= word (symbol ",")) (list 'NEXT word))
       ) (rest lista)
@@ -910,7 +909,6 @@
      )
    )
 )
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; buscar-lineas-restantes: recibe un ambiente y retorna la
 ; representacion intermedia del programa a partir del puntero de
@@ -977,23 +975,26 @@
 ; user=> (continuar-linea [(list '(10 (PRINT X)) '(15 (GOSUB 100) (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [20 3] [[15 2]] [] [] 0 {}])
 ; [:omitir-restante [((10 (PRINT X)) (15 (GOSUB 100) (X = X + 1)) (20 (NEXT I , J))) [15 1] [] [] [] 0 {}]]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;(map (fn [value]
-;   (cond
-;     (not= (first (second value)) 'GOSUB) (first value)
-;     (and (= (first (second value)) 'NEXT) (> (count (second value)) 2)) (desagrupar value)
-;     :else value
-;     )
-;   ) (first amb)
-;)
 (defn imprimir-texto [posicion amb]
   (print "?RETURN WITHOUT GOSUB ERROR IN" posicion)
   (assoc ['nil] 1 amb)
 )
 
+(defn obtener-linea-proxima [amb]
+  [(first (first (nth amb 2))) (- (second (first (nth amb 2))) 1)]
+)
+
+(defn pasar-linea [amb]
+  (if
+    (and (not (empty? (nth amb 2))) (pos? (second (first (nth amb 2)))))
+      (vector (first amb) (obtener-linea-proxima amb) [] [] [] 0 {})
+  )
+)
+
 (defn continuar-linea [amb]
   (cond
     (empty? (nth amb 2)) (imprimir-texto (first (second amb)) amb)
-    :else [:omitir-restante amb]
+    :else [:omitir-restante (pasar-linea amb)]
   )
 )
 
@@ -1006,8 +1007,39 @@
 ; user=> (extraer-data (list '(10 (PRINT X) (REM ESTE NO) (DATA 30)) '(20 (DATA HOLA)) (list 100 (list 'DATA 'MUNDO (symbol ",") 10 (symbol ",") 20))))
 ; ("HOLA" "MUNDO" 10 20)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn extraer-data [prg]
+(defn imprimir-segun-tipo [value]
+  (cond
+    (number? value) value
+    (< 1 (count (str value))) (str value)
   )
+)
+
+(defn recorrer-para-imprimir [items]
+  (remove nil?
+    (map (fn [value]
+       (imprimir-segun-tipo value)
+       ) items
+    )
+  )
+)
+
+(defn devolver-contenido [linea]
+  (cond
+     (= (first (second linea)) 'DATA) (recorrer-para-imprimir (rest (first (rest linea))))
+  )
+)
+
+(defn extraer-data [prg]
+  (cond
+    (empty? (first prg)) '()
+    :else (apply concat (remove nil?
+          (map (fn[value]
+            (devolver-contenido value)
+            ) prg
+          )
+      ))
+  )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; ejecutar-asignacion: recibe una asignacion y un ambiente, y
