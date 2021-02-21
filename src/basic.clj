@@ -635,7 +635,11 @@
          + (if (and (string? operando1) (string? operando2))
              (str operando1 operando2)
              (+ operando1 operando2))
+         - (if (and (string? operando1) (string? operando2))
+             (str operando1 operando2)
+             (- operando1 operando2))
          / (if (= operando2 0) (dar-error 133 nro-linea) (/ operando1 operando2)) ; Division by zero error
+         * (if (and (string? operando1) (string? operando2)) (* operando1 operando2)) ; Division by zero error
          AND (let [op1 (+ 0 operando1), op2 (+ 0 operando2)] (if (and (not= op1 0) (not= op2 0)) 1 0))
          MID$ (if (< operando2 1)
                 (dar-error 53 nro-linea)                    ; Illegal quantity error
@@ -712,19 +716,6 @@
 ; user=> (anular-invalidos '(IF X & * Y < 12 THEN LET ! X = 0))
 ; (IF X nil * Y < 12 THEN LET nil X = 0)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;(defn invalido [palabra]
-;  (
-;    if (and
-;         (= 1 (count palabra))
-;         (not (operador? palabra))
-;         (not (palabra-reservada? palabra))
-;         (not (Character/isLetter (first (seq palabra))))
-;         (nil? (parse-int (str palabra)))
-;         )
-;    (str "nil")
-;    (str palabra))
-;)
-
 (defn invalido [palabra]
   (
     cond (= palabra '&) nil
@@ -1055,7 +1046,11 @@
 ; [((10 (PRINT X))) [10 1] [] [] [] 0 {X$ "HOLA MUNDO"}]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn ejecutar-asignacion [sentencia amb]
+  (cond
+    (empty? (last amb)) (assoc amb (count amb) (hash-map (first sentencia) (nth sentencia (- (count sentencia) 1))))
+    :else (calcular-expresion sentencia amb)
   )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; preprocesar-expresion: recibe una expresion y la retorna con
@@ -1066,9 +1061,25 @@
 ; user=> (preprocesar-expresion '(X + . / Y% * Z) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 5 Y% 2}])
 ; (5 + 0 / 2 * 0)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn preprocesar-expresion [expr amb]
-  )
+(defn reemplazar-variables [linea variables]
+  (concat (map (fn[value]
+         (cond
+          (contains? (last variables) value) (get (last variables) value)
+          (not (nil? (re-find #"\p{L}{1}[\$]" (str value)))) ""
+          (not (nil? (re-find #"\.{1}" (str value)))) 0
+          (and (= (count (str value)) 1) (nil? (parse-int (str value))) (not (operador? (str value)))) 0
+            :else value
+         )
+    ) linea
+  ))
+)
 
+(defn preprocesar-expresion [expr amb]
+  (cond
+    (empty? (keys (last amb))) expr
+    :else (reemplazar-variables expr amb)
+  )
+)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; desambiguar: recibe un expresion y la retorna sin los + unarios,
 ; con los - unarios reemplazados por -u y los MID$ ternarios
@@ -1083,8 +1094,11 @@
 ; (MID3$ ( 1 , -u 2 + K , 3 ))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn desambiguar [expr]
+  (cond
+    (contains? (set expr) 'MID$) (desambiguar-mid expr)
+    (contains? (set expr) '-) (desambiguar-mas-menos expr)
   )
-
+)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; precedencia: recibe un token y retorna el valor de su
 ; precedencia, por ejemplo:
@@ -1217,8 +1231,12 @@
 ; "-.5"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn eliminar-cero-entero [n]
-
+  (cond
+    (nil? n) nil
+    (and (float? n) (not (nil? (re-find #"[+-]?0.*" (str n))))) (clojure.string/replace (str n) #"0." ".")
+    :else (str n)
   )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Despues de cargarse el archivo, debe mostrarse el valor true
