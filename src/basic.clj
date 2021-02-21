@@ -1,4 +1,3 @@
-(ns basic)
 ; https://porkrind.org/a2
 ; https://www.calormen.com/jsbasic
 ; https://www.scullinsteel.com/apple2/
@@ -525,6 +524,7 @@
 ; actualizado
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn evaluar [sentencia amb]
+  (print (first sentencia))
   (if (or (contains? (set sentencia) nil) (and (palabra-reservada? (first sentencia)) (= (second sentencia) '=)))
     (do (dar-error 16 (amb 1)) [nil amb])                   ; Syntax error
     (case (first sentencia)
@@ -639,8 +639,15 @@
              (str operando1 operando2)
              (- operando1 operando2))
          / (if (= operando2 0) (dar-error 133 nro-linea) (/ operando1 operando2)) ; Division by zero error
-         * (if (and (string? operando1) (string? operando2)) (* operando1 operando2)) ; Division by zero error
+         * (if (and (string? operando1) (string? operando2)) (* operando1 operando2))
+         < (if (or (string? operando1) (string? operando2)) (dar-error 53 nro-linea) (< operando1 operando2))
+         > (if (or (string? operando1) (string? operando2)) (dar-error 53 nro-linea) (> operando1 operando2))
+         <= (if (or (string? operando1) (string? operando2)) (dar-error 53 nro-linea) (<= operando1 operando2))
+         >= (if (or (string? operando1) (string? operando2)) (dar-error 53 nro-linea) (>= operando1 operando2))
+         <> (if (or (string? operando1) (string? operando2)) (dar-error 53 nro-linea) (distinct? operando1 operando2))
+         OR (let [op1 (+ 0 operando1), op2 (+ 0 operando2)] (if (or (not= op1 0) (not= op2 0)) 1 0))
          AND (let [op1 (+ 0 operando1), op2 (+ 0 operando2)] (if (and (not= op1 0) (not= op2 0)) 1 0))
+         LIST (print reserved-words)
          MID$ (if (< operando2 1)
                 (dar-error 53 nro-linea)                    ; Illegal quantity error
                 (let [ini (dec operando2)] (if (>= ini (count operando1)) "" (subs operando1 ini))))))))
@@ -670,10 +677,10 @@
 ; Palabras reservadas a utilizar ;
 ;;;;;;
 (def reserved_words
-  #{"LOAD" "SAVE" "INPUT" "PRINT" "DATA" "READ" "REM" "RESTORE"
-    "CLEAR" "LET" "LIST" "NEW" "RUN" "END" "FOR" "TO" "NEXT" "STEP"
-    "GOSUB" "RETURN" "GOTO" "IF" "THEN" "ON" "ENV" "EXIT" "ATN"
-    "INT" "SIN" "LEN" "MID$" "MID3$" "ASC" "CHR$" "STR$" "OR" "AND"}
+  #{'LOAD 'SAVE 'INPUT 'PRINT 'DATA 'READ 'REM 'RESTORE
+    'CLEAR 'LET 'LIST 'NEW 'RUN 'END 'FOR 'TO 'NEXT 'STEP
+    'GOSUB 'RETURN 'GOTO 'IF 'THEN 'ON 'ENV 'EXIT 'ATN
+    'INT 'SIN 'LEN 'MID$ 'MID3$ 'ASC 'CHR$ 'STR$ 'OR 'AND}
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -685,7 +692,7 @@
 ; false
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn palabra-reservada? [x]
-  (contains? reserved_words (clojure.string/upper-case x))
+  (contains? reserved_words x)
 )
 
 
@@ -1159,16 +1166,6 @@
     (= 'OR token) 2
     (= 'AND token) 2
     (= 'NOT token) 1
-    (= '= token) 2
-    (= '<> token) 2
-    (= '< token) 2
-    (= '<= token) 2
-    (= '>= token) 2
-    (= '> token) 2
-    (= '+ token) 2
-    (= '- token) 2
-    (= '* token) 2
-    (= '/ token) 2
     (= '-u token) 1
     (= (symbol "^") token) 2
     (= 'LOAD token) 1
@@ -1186,6 +1183,29 @@
     (= 'NEW token) 0
     (= 'RUN token) 0
     (= 'END token) 0
+    (= 'FOR token) 0
+    (= 'TO token) 0
+    (= 'NEXT token) 0
+    (= 'STEP token) 0
+    (= 'GOSUB token) 1
+    (= 'RETURN token) 0
+    (= 'GOTO token) 1
+    (= 'IF token) 1
+    (= 'THEN token) 1
+    (= 'ON token) 1
+    (= 'ENV token) 0
+    (= 'EXIT token) 0
+    (= 'ATN token) 1
+    (= 'INT token) 1
+    (= 'SIN token) 1
+    (= 'LEN token) 1
+    (= 'MID$ token) 2
+    (= 'MID3$ token) 3
+    (= 'ASC token) 1
+    (= 'CHR$ token) 1
+    (= 'STR$ token) 1
+    (= 'LEN token) 1
+    (operador? token) 2
     (number? token) 0
     (string? token) 0
     :else 0 ;; sino existe la tomo como la más baja para que no la tenga en cuenta
@@ -1204,17 +1224,24 @@
 ; user=> (eliminar-cero-decimal 'A)
 ; A
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn transform-number [n]
+  (if (zero? (- (Float/parseFloat n) (int (Math/floor (Float/parseFloat n)))))
+      (parse-int n)
+    (Float/parseFloat n)
+  )
+)
+
 (defn eliminar-cero-decimal [n]
-  ;(cond
-  ;  (nil? n) nil
-  ;  (symbol? n) n
-  ;  (integer? n) (parse-int n)
-  ;  (zero? n) (str n)
-  ;  (and (float? n) (not (nil? (re-find #"[+-]?.0*" (str n))))) (parse-int (clojure.string/replace (str n) #".0" ""))
-  ;  (> n 1) (read-string (apply str (seq (str n))))
-  ;  (and (> n 0) (< n 1)) (Float/parseFloat (apply str (nthrest (seq (str n)) 1)))
-  ;)
-  n
+  (cond
+    (nil? n) nil
+    (symbol? n) n
+    (float? n) (transform-number (clojure.string/replace (str n) #".0" ""))
+    (number? n) n
+    (zero? n) (str n)
+    (> n 1) (read-string (apply str (seq (str n))))
+    (and (> n 0) (< n 1)) (Float/parseFloat (apply str (nthrest (seq (str n)) 1)))
+    :else n
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
