@@ -359,7 +359,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn calcular-expresion [expr amb]
   (calcular-rpn (shunting-yard (desambiguar (preprocesar-expresion expr amb))) (amb 1))
-  )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; desambiguar-mas-menos: recibe una expresion y la retorna sin
@@ -1048,7 +1048,7 @@
 (defn ejecutar-asignacion [sentencia amb]
   (cond
     (empty? (last amb)) (assoc amb (count amb) (hash-map (first sentencia) (nth sentencia (- (count sentencia) 1))))
-    :else (calcular-expresion sentencia amb)
+    :else (assoc amb (- (count amb) 1) (into (last amb) (hash-map  (symbol (first (first (last amb)))) (calcular-expresion sentencia amb))))
   )
 )
 
@@ -1062,22 +1062,26 @@
 ; (5 + 0 / 2 * 0)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn reemplazar-variables [linea variables]
-  (concat (map (fn[value]
-         (cond
-          (contains? (last variables) value) (get (last variables) value)
-          (not (nil? (re-find #"\p{L}{1}[\$]" (str value)))) ""
-          (not (nil? (re-find #"\.{1}" (str value)))) 0
-          (and (= (count (str value)) 1) (nil? (parse-int (str value))) (not (operador? (str value)))) 0
-            :else value
-         )
-    ) linea
-  ))
+  (remove nil?
+     (concat (map (fn[value]
+           (cond
+            (= (str value) "=") nil
+            (contains? (last variables) value) (get (last variables) value)
+            (not (nil? (re-find #"\p{L}{1}[\$]{1}" (str value)))) ""
+            (not (nil? (re-find #"\.{1}" (str value)))) 0
+            (and (= (count (str value)) 1) (nil? (parse-int (str value))) (not (operador? (str value)))) 0
+              :else value
+           )
+      ) linea
+      )
+    )
+  )
 )
 
 (defn preprocesar-expresion [expr amb]
   (cond
     (empty? (keys (last amb))) expr
-    :else (reemplazar-variables expr amb)
+    :else (reemplazar-variables (last (split-at (.indexOf (apply str expr) "=") expr)) amb)
   )
 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1094,10 +1098,7 @@
 ; (MID3$ ( 1 , -u 2 + K , 3 ))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn desambiguar [expr]
-  (cond
-    (contains? (set expr) 'MID$) (desambiguar-mid expr)
-    (contains? (set expr) '-) (desambiguar-mas-menos expr)
-  )
+  (desambiguar-mas-menos (desambiguar-mid expr))
 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; precedencia: recibe un token y retorna el valor de su
@@ -1115,22 +1116,26 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn precedencia [token]
   (cond
-    (or (= 'OR token) (= "OR" token)) 1
-    (or (= 'AND token) (= "AND" token)) 2
-    (or (= 'NOT token) (= "NOT" token)) 3
-    (or (= '= token) (= "=" token)) 4
-    (or (= '<> token) (= "<>" token)) 4
-    (or (= '< token) (= "<" token)) 4
-    (or (= '<= token) (= "<=" token)) 4
-    (or (= '>= token) (= ">=" token)) 4
-    (or (= '> token) (= ">" token)) 4
-    (or (= '+ token) (= "+" token)) 5
-    (or (= '- token) (= "-" token)) 5
-    (or (= '* token) (= "*" token)) 6
-    (or (= '/ token) (= "/" token)) 6
-    (or (= '-u token) (= "-u" token)) 7
-    (or (= (symbol "^") token) (= "^" token)) 8
-    (or (palabra-reservada? token ) (or((= '? token) (= "?" token) ))) 9
+    (= 'OR token) 1
+    (= 'AND token) 2
+    (= 'NOT token) 3
+    (= '= token) 4
+    (= '<> token) 4
+    (= '< token) 4
+    (= '<= token) 4
+    (= '>= token) 4
+    (= '> token) 4
+    (= '+ token) 5
+    (= '- token) 5
+    (= '* token) 6
+    (= '/ token) 6
+    (= '-u token) 7
+    (= (symbol "^") token) 8
+    (palabra-reservada? token) 9
+    (number? token) 9
+    (string? token) 9
+    (= (symbol "(") token) nil
+    (= (symbol ")") token) nil
     :else 0 ;; sino existe la tomo como la más baja para que no la tenga en cuenta
   )
 )
@@ -1151,34 +1156,38 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn aridad [token]
   (cond
-    (or (= 'OR token) (= "OR" token)) 2
-    (or (= 'AND token) (= "AND" token)) 2
-    (or (= 'NOT token) (= "NOT" token)) 1
-    (or (= '= token) (= "=" token)) 2
-    (or (= '<> token) (= "<>" token)) 2
-    (or (= '< token) (= "<" token)) 2
-    (or (= '<= token) (= "<=" token)) 2
-    (or (= '>= token) (= ">=" token)) 2
-    (or (= '> token) (= ">" token)) 2
-    (or (= '+ token) (= "+" token)) 2
-    (or (= '- token) (= "-" token)) 2
-    (or (= '* token) (= "*" token)) 2
-    (or (= '/ token) (= "/" token)) 2
-    (or (= '-u token) (= "-u" token)) 1
-    (or (= (symbol "^") token) (= "^" token)) 2
-    (or (= 'LOAD token) (= "LOAD" token)) 1
-    (or (= 'SAVE token) (= "SAVE" token)) 1
-    (or (= 'INPUT token) (= "INPUT" token)) 0
-    (or (= 'PRINT token) (= "PRINT" token)) 0
-    (or (= 'DATA token) (= "DATA" token)) 0
-    (or (= 'READ token) (= "READ" token)) 0
-    (or (= 'REM token) (= "REM" token)) 1
-    (or (= 'LET token) (= "LET" token)) 1
-    (or (= 'CLEAR token) (= "CLEAR" token)) 0
-    (or (= 'CLEAR token) (= "CLEAR" token)) 0
-    (or (= 'CLEAR token) (= "CLEAR" token)) 0
-    (or (= 'CLEAR token) (= "CLEAR" token)) 0
-    (or (= 'CLEAR token) (= "CLEAR" token)) 0
+    (= 'OR token) 2
+    (= 'AND token) 2
+    (= 'NOT token) 1
+    (= '= token) 2
+    (= '<> token) 2
+    (= '< token) 2
+    (= '<= token) 2
+    (= '>= token) 2
+    (= '> token) 2
+    (= '+ token) 2
+    (= '- token) 2
+    (= '* token) 2
+    (= '/ token) 2
+    (= '-u token) 1
+    (= (symbol "^") token) 2
+    (= 'LOAD token) 1
+    (= 'SAVE token) 1
+    (= 'INPUT token) 0
+    (= 'PRINT token) 0
+    (= 'DATA token) 0
+    (= 'READ token) 0
+    (= 'REM token) 1
+    (= 'LET token) 1
+    (= 'AND token) 2
+    (= 'CLEAR token) 0
+    (= 'OR token) 2
+    (= 'RESTORE token) 0
+    (= 'NEW token) 0
+    (= 'RUN token) 0
+    (= 'END token) 0
+    (number? token) 0
+    (string? token) 0
     :else 0 ;; sino existe la tomo como la más baja para que no la tenga en cuenta
   )
 )
@@ -1196,17 +1205,18 @@
 ; A
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn eliminar-cero-decimal [n]
-  (cond
-    (nil? n) nil
-    (symbol? n) (str n)
-    (integer? n) (parse-int n)
-    (zero? n) (str n)
-    (>= n 1) (read-string (apply str (seq (str n))))
-    (and (> n 0) (< n 1)) (Float/parseFloat (apply str (nthrest (seq (str n)) 1)))
-    )
-  )
+  ;(cond
+  ;  (nil? n) nil
+  ;  (symbol? n) n
+  ;  (integer? n) (parse-int n)
+  ;  (zero? n) (str n)
+  ;  (and (float? n) (not (nil? (re-find #"[+-]?.0*" (str n))))) (parse-int (clojure.string/replace (str n) #".0" ""))
+  ;  (> n 1) (read-string (apply str (seq (str n))))
+  ;  (and (> n 0) (< n 1)) (Float/parseFloat (apply str (nthrest (seq (str n)) 1)))
+  ;)
+  n
+)
 
-;(>= n 1) (if (integer? n) ((parse-int n)) (read-string (apply str (seq (str n)))) )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; eliminar-cero-entero: recibe un simbolo y lo retorna convertido
 ; en cadena, omitiendo para los numeros del intervalo (-1..1) el
