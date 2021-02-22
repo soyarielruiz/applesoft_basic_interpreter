@@ -13,3 +13,4 @@ pom.xml.asc
 .nrepl-port
 .cpcache/
 .idea/
+/src/clojure-1.8.0.jar

@@ -1,3 +1,4 @@
+(ns basic)
 ; https://porkrind.org/a2
 ; https://www.calormen.com/jsbasic
 ; https://www.scullinsteel.com/apple2/
@@ -126,6 +127,9 @@
    (let [sentencias-con-nexts-expandidos (expandir-nexts sentencias)]
      (evaluar-linea sentencias-con-nexts-expandidos sentencias-con-nexts-expandidos amb)))
   ([linea sentencias amb]
+   ;(print sentencias " --- ")
+   ;(print linea " --- ")
+   ;(print amb " --- | ")
    (if (empty? sentencias)
      [:sin-errores amb]
      (let [sentencia (anular-invalidos (first sentencias)), par-resul (evaluar sentencia amb)]
@@ -524,7 +528,7 @@
 ; actualizado
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn evaluar [sentencia amb]
-  (print (first sentencia))
+  ;(print (first sentencia))
   (if (or (contains? (set sentencia) nil) (and (palabra-reservada? (first sentencia)) (= (second sentencia) '=)))
     (do (dar-error 16 (amb 1)) [nil amb])                   ; Syntax error
     (case (first sentencia)
@@ -601,6 +605,11 @@
       NEXT (if (<= (count (next sentencia)) 1)
              (retornar-al-for amb (fnext sentencia))
              (do (dar-error 16 (amb 1)) [nil amb]))         ; Syntax error
+      LET (evaluar (drop 1 sentencia) amb)
+      CLEAR (assoc amb 6 {})
+      RESTORE (assoc amb 5 0)
+      LIST (mostrar-listado (first amb))
+      LEN (if (<= (count (next sentencia)) 0) (count sentencia))
       (if (= (second sentencia) '=)
         (let [resu (ejecutar-asignacion sentencia amb)]
           (if (nil? resu)
@@ -647,7 +656,6 @@
          <> (if (or (string? operando1) (string? operando2)) (dar-error 53 nro-linea) (distinct? operando1 operando2))
          OR (let [op1 (+ 0 operando1), op2 (+ 0 operando2)] (if (or (not= op1 0) (not= op2 0)) 1 0))
          AND (let [op1 (+ 0 operando1), op2 (+ 0 operando2)] (if (and (not= op1 0) (not= op2 0)) 1 0))
-         LIST (print reserved-words)
          MID$ (if (< operando2 1)
                 (dar-error 53 nro-linea)                    ; Illegal quantity error
                 (let [ini (dec operando2)] (if (>= ini (count operando1)) "" (subs operando1 ini))))))))
@@ -974,7 +982,9 @@
 ; [:omitir-restante [((10 (PRINT X)) (15 (GOSUB 100) (X = X + 1)) (20 (NEXT I , J))) [15 1] [] [] [] 0 {}]]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn imprimir-texto [posicion amb]
-  (print "?RETURN WITHOUT GOSUB ERROR IN" posicion)
+  ;(print posicion "  !!!! ")
+  ;(print amb "  !!!! ")
+  (print "?RETURN WITHOUT GOSUB ERROR IN" (str posicion))
   (assoc ['nil] 1 amb)
 )
 
@@ -990,7 +1000,9 @@
 )
 
 (defn continuar-linea [amb]
+  ;(print (first (second amb)) "  !!!! ")
   (cond
+    ;(true) (imprimir-texto (first (first amb)) amb)
     (empty? (nth amb 2)) (imprimir-texto (first (second amb)) amb)
     :else [:omitir-restante (pasar-linea amb)]
   )
@@ -1051,11 +1063,19 @@
 ; [((10 (PRINT X))) [10 1] [] [] [] 0 {X 3}]
 ; user=> (ejecutar-asignacion '(X$ = X$ + " MUNDO") ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X$ "HOLA"}])
 ; [((10 (PRINT X))) [10 1] [] [] [] 0 {X$ "HOLA MUNDO"}]
+;[((30 (LET N = 1)) (40 (LET S = S + N)) (50 (PRINT N , S)) (60 (LET N = N + 1)) (70 (IF N <= 100 GOTO 40)) (80 (PRINT) (REM PRINT EMPTY LINE)) (90 (PRINT "FINAL SUM: " ; S)) (100 (END))) [30 1] [] [] [] 0 {}]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn ejecutar-asignacion [sentencia amb]
+  ;(print (hash-map (symbol (first (first (last amb)))) (calcular-expresion (rest (rest sentencia)) amb)) " ... ")
+  ;(if (not (empty? (last amb)))
+  ;  (continuar-linea amb)
+  ;  (print amb sentencia " º ")
+  ;)
   (cond
-    (empty? (last amb)) (assoc amb (count amb) (hash-map (first sentencia) (nth sentencia (- (count sentencia) 1))))
-    :else (assoc amb (- (count amb) 1) (into (last amb) (hash-map  (symbol (first (first (last amb)))) (calcular-expresion sentencia amb))))
+    (empty? (last amb)) (assoc amb (- (count amb) 1) (hash-map (first sentencia) (nth sentencia (- (count sentencia) 1))))
+    :else (assoc amb 6 (assoc (last amb) (first sentencia) (calcular-expresion (rest (rest sentencia)) amb)))
+    ;
+    ;(assoc amb (- (count amb) 1) (into (last amb) (hash-map  (symbol (first (first (last amb)))) (calcular-expresion sentencia amb))))
   )
 )
 
@@ -1141,8 +1161,8 @@
     (palabra-reservada? token) 9
     (number? token) 9
     (string? token) 9
-    (= (symbol "(") token) nil
-    (= (symbol ")") token) nil
+    (= (symbol "(") token) 10
+    (= (symbol ")") token) 10
     :else 0 ;; sino existe la tomo como la más baja para que no la tenga en cuenta
   )
 )
@@ -1171,7 +1191,7 @@
     (= 'LOAD token) 1
     (= 'SAVE token) 1
     (= 'INPUT token) 0
-    (= 'PRINT token) 0
+    (= 'PRINT token) 1
     (= 'DATA token) 0
     (= 'READ token) 0
     (= 'REM token) 1
