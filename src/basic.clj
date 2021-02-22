@@ -1,4 +1,3 @@
-(ns basic)
 ; https://porkrind.org/a2
 ; https://www.calormen.com/jsbasic
 ; https://www.scullinsteel.com/apple2/
@@ -1161,9 +1160,9 @@
     (palabra-reservada? token) 9
     (number? token) 9
     (string? token) 9
-    (= (symbol "(") token) 10
-    (= (symbol ")") token) 10
-    :else 0 ;; sino existe la tomo como la más baja para que no la tenga en cuenta
+    (= (symbol "(") token) nil
+    (= (symbol ")") token) nil
+    ;:else 0 ;; sino existe la tomo como la más baja para que no la tenga en cuenta
   )
 )
 
