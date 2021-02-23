@@ -126,9 +126,6 @@
    (let [sentencias-con-nexts-expandidos (expandir-nexts sentencias)]
      (evaluar-linea sentencias-con-nexts-expandidos sentencias-con-nexts-expandidos amb)))
   ([linea sentencias amb]
-   ;(print sentencias " --- ")
-   ;(print linea " --- ")
-   ;(print amb " --- | ")
    (if (empty? sentencias)
      [:sin-errores amb]
      (let [sentencia (anular-invalidos (first sentencias)), par-resul (evaluar sentencia amb)]
@@ -359,7 +356,14 @@
 ; user=> (calcular-expresion '(X + 5) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 2}])
 ; 7
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn printear [expr amb]
+  (prn "\n CALCULAR DES " (desambiguar (preprocesar-expresion expr amb)) " -- ")
+  (prn "\n CALCULAR SHU " (shunting-yard (desambiguar (preprocesar-expresion expr amb))) " -- ")
+  (prn "\n CALCULAR RPN " (calcular-rpn (shunting-yard (desambiguar (preprocesar-expresion expr amb))) (amb 1)) " -- ")
+)
+
 (defn calcular-expresion [expr amb]
+  ;(printear expr amb)
   (calcular-rpn (shunting-yard (desambiguar (preprocesar-expresion expr amb))) (amb 1))
 )
 
@@ -527,7 +531,6 @@
 ; actualizado
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn evaluar [sentencia amb]
-  ;(print (first sentencia))
   (if (or (contains? (set sentencia) nil) (and (palabra-reservada? (first sentencia)) (= (second sentencia) '=)))
     (do (dar-error 16 (amb 1)) [nil amb])                   ; Syntax error
     (case (first sentencia)
@@ -608,7 +611,7 @@
       CLEAR (assoc amb 6 {})
       RESTORE (assoc amb 5 0)
       LIST (mostrar-listado (first amb))
-      LEN (if (<= (count (next sentencia)) 0) (count sentencia))
+      END [nil amb]
       (if (= (second sentencia) '=)
         (let [resu (ejecutar-asignacion sentencia amb)]
           (if (nil? resu)
@@ -648,11 +651,11 @@
              (- operando1 operando2))
          / (if (= operando2 0) (dar-error 133 nro-linea) (/ operando1 operando2)) ; Division by zero error
          * (if (and (string? operando1) (string? operando2)) (* operando1 operando2))
-         < (if (or (string? operando1) (string? operando2)) (dar-error 53 nro-linea) (< operando1 operando2))
-         > (if (or (string? operando1) (string? operando2)) (dar-error 53 nro-linea) (> operando1 operando2))
-         <= (if (or (string? operando1) (string? operando2)) (dar-error 53 nro-linea) (<= operando1 operando2))
-         >= (if (or (string? operando1) (string? operando2)) (dar-error 53 nro-linea) (>= operando1 operando2))
-         <> (if (or (string? operando1) (string? operando2)) (dar-error 53 nro-linea) (distinct? operando1 operando2))
+         < (if (or (string? operando1) (string? operando2)) (dar-error 53 nro-linea) (if (< operando1 operando2) 1 0))
+         > (if (or (string? operando1) (string? operando2)) (dar-error 53 nro-linea) (if (> operando1 operando2) 1 0))
+         <= (if (or (string? operando1) (string? operando2)) (dar-error 163 nro-linea) (if (<= operando1 operando2) 1 0))
+         >= (if (or (string? operando1) (string? operando2)) (dar-error 53 nro-linea) (if (>= operando1 operando2) 1 0))
+         <> (if (or (string? operando1) (string? operando2)) (dar-error 53 nro-linea) (if (not= operando1 operando2) 1 0))
          OR (let [op1 (+ 0 operando1), op2 (+ 0 operando2)] (if (or (not= op1 0) (not= op2 0)) 1 0))
          AND (let [op1 (+ 0 operando1), op2 (+ 0 operando2)] (if (and (not= op1 0) (not= op2 0)) 1 0))
          MID$ (if (< operando2 1)
@@ -707,8 +710,7 @@
 ; Simbolos reservados a utilizar ;
 ;;;;;;
 (def reserved_symbols
-  #{"+" "-" "*" "/" "?" "^" "=" "<>" "<"
-    "<=" ">" ">=" "OR" "AND"}
+  #{'+ '- '* '/ '? (symbol "^") '= '<> '< '<= '> '>= 'OR 'AND}
 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; operador?: predicado para determinar si un identificador es un
@@ -741,6 +743,24 @@
 (defn anular-invalidos [sentencia]
   (map invalido sentencia)
 )
+;(defn anular-invalidos [sentencia]
+;  (map (fn [x]
+;         (cond
+;           (number? x) x
+;           (string? x) x
+;           (operador? x) x
+;           (palabra-reservada? x) x
+;           (variable-float? x) x
+;           (variable-integer? x) x
+;           (variable-string? x) x
+;           (= (symbol ".") x) x
+;           (= (symbol ",") x) x
+;           (= (symbol ";") x) x
+;           (= (symbol "(") x) x
+;           (= (symbol ")") x) x
+;           :else nil
+;           )) sentencia)
+;  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; cargar-linea: recibe una linea de codigo y un ambiente y retorna
@@ -850,6 +870,11 @@
   (cond
     (= "%" (str (last (seq (str x))))) false
     (= "$" (str (last (seq (str x))))) false
+    (operador? x) false
+    (number? x) false
+    (string? x) false
+    (palabra-reservada? x) false
+    (= (symbol ";") x) false
     :else true
   )
 )
@@ -1065,17 +1090,7 @@
 ;[((30 (LET N = 1)) (40 (LET S = S + N)) (50 (PRINT N , S)) (60 (LET N = N + 1)) (70 (IF N <= 100 GOTO 40)) (80 (PRINT) (REM PRINT EMPTY LINE)) (90 (PRINT "FINAL SUM: " ; S)) (100 (END))) [30 1] [] [] [] 0 {}]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn ejecutar-asignacion [sentencia amb]
-  ;(print (hash-map (symbol (first (first (last amb)))) (calcular-expresion (rest (rest sentencia)) amb)) " ... ")
-  ;(if (not (empty? (last amb)))
-  ;  (continuar-linea amb)
-  ;  (print amb sentencia " º ")
-  ;)
-  (cond
-    (empty? (last amb)) (assoc amb (- (count amb) 1) (hash-map (first sentencia) (nth sentencia (- (count sentencia) 1))))
-    :else (assoc amb 6 (assoc (last amb) (first sentencia) (calcular-expresion (rest (rest sentencia)) amb)))
-    ;
-    ;(assoc amb (- (count amb) 1) (into (last amb) (hash-map  (symbol (first (first (last amb)))) (calcular-expresion sentencia amb))))
-  )
+  (assoc amb 6 (assoc (last amb) (first sentencia) (calcular-expresion (rest (rest sentencia)) amb)))
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1088,26 +1103,28 @@
 ; (5 + 0 / 2 * 0)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn reemplazar-variables [linea variables]
-  (remove nil?
-     (concat (map (fn[value]
-           (cond
-            (= (str value) "=") nil
-            (contains? (last variables) value) (get (last variables) value)
-            (not (nil? (re-find #"\p{L}{1}[\$]{1}" (str value)))) ""
-            (not (nil? (re-find #"\.{1}" (str value)))) 0
-            (and (= (count (str value)) 1) (nil? (parse-int (str value))) (not (operador? (str value)))) 0
-              :else value
+  (concat (map (fn[value]
+         (cond
+           (operador? value) value
+           (palabra-reservada? value) value
+           (= (str value) "=") nil
+           (contains? (last variables) value) (get (last variables) value)
+           (and (not (contains? (last variables) value)) (variable-string? value)) ""
+           (and (not (contains? (last variables) value)) (or (variable-float? value) (variable-integer? value))) 0
+           (and (list? value) (< 1 (count value))) (reemplazar-variables value variables)
+           (= '. value) 0
+           :else value
            )
       ) linea
       )
     )
-  )
 )
 
 (defn preprocesar-expresion [expr amb]
   (cond
     (empty? (keys (last amb))) expr
-    :else (reemplazar-variables (last (split-at (.indexOf (apply str expr) "=") expr)) amb)
+    (palabra-reservada? (last expr)) expr
+    :else (reemplazar-variables expr amb)
   )
 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1162,7 +1179,7 @@
     (string? token) 9
     (= (symbol "(") token) nil
     (= (symbol ")") token) nil
-    ;:else 0 ;; sino existe la tomo como la más baja para que no la tenga en cuenta
+    :else 0 ;; sino existe la tomo como la más baja para que no la tenga en cuenta
   )
 )
 
@@ -1253,9 +1270,10 @@
 (defn eliminar-cero-decimal [n]
   (cond
     (nil? n) nil
-    (symbol? n) n
+    (and (symbol? n) (or (variable-integer? n) (variable-float? n) (variable-string? n))) n
+    (string? n) n
     (float? n) (transform-number (clojure.string/replace (str n) #".0" ""))
-    (number? n) n
+    (integer? n) n
     (zero? n) (str n)
     (> n 1) (read-string (apply str (seq (str n))))
     (and (> n 0) (< n 1)) (Float/parseFloat (apply str (nthrest (seq (str n)) 1)))
@@ -1287,8 +1305,12 @@
 ; "-.5"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn eliminar-cero-entero [n]
+  (if (nil? n) nil) ; => VER!!
   (cond
-    (nil? n) nil
+    ;(nil? n) nil
+    (string? n) n
+    (integer? n) (str n)
+    (and (symbol? n) (or (variable-integer? n) (variable-float? n) (variable-string? n))) n
     (and (float? n) (not (nil? (re-find #"[+-]?0.*" (str n))))) (clojure.string/replace (str n) #"0." ".")
     :else (str n)
   )
