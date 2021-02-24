@@ -813,19 +813,18 @@
 )
 
 (defn expandir-nexts [n]
-  (if (not (list? n)) n
-       (apply concat
-              (map (fn [value]
-                     (cond
-                       (not= (first value) 'NEXT) (list value)
-                       (= value (list (list 'NEXT))) (list value)
-                       (and (= (first value) 'NEXT) (= (count value) 2)) (list value)
-                       (and (= (first value) 'NEXT) (> (count value) 2)) (desagrupar value)
-                       :else value
-                     )) n
-              )
-        )
-  )
+     (apply concat
+            (map (fn [value]
+                   (cond
+                     (= value (list 'NEXT)) (list value)
+                     (not= (first value) 'NEXT) (list value)
+                     (= value (list (list 'NEXT))) (list value)
+                     (and (= (first value) 'NEXT) (= (count value) 2)) (list value)
+                     (and (= (first value) 'NEXT) (> (count value) 2)) (desagrupar value)
+                     :else value
+                   )) n
+            )
+      )
 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; dar-error: recibe un error (codigo o mensaje) y el puntero de
