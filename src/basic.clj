@@ -747,7 +747,6 @@
     (= (symbol ";") x) x
     (= (symbol "(") x) x
     (= (symbol ")") x) x
-    (not (list? x)) x
     (number? x) x
     (string? x) x
     (operador? x) x
@@ -819,6 +818,7 @@
               (map (fn [value]
                      (cond
                        (not= (first value) 'NEXT) (list value)
+                       (= value (list (list 'NEXT))) (list value)
                        (and (= (first value) 'NEXT) (= (count value) 2)) (list value)
                        (and (= (first value) 'NEXT) (> (count value) 2)) (desagrupar value)
                        :else value
@@ -884,6 +884,8 @@
     (= (symbol ")") x) false
     (= (symbol ";") x) false
     (= (symbol ",") x) false
+    (= (symbol "&") x) false
+    (= (symbol "!") x) false
     :else true
   )
 )
