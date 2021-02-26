@@ -604,7 +604,7 @@
       LET (evaluar (drop 1 sentencia) amb)
       READ (leer-data (rest sentencia) amb)
       CLEAR (assoc amb 6 {})
-      RESTORE (assoc amb 5 0)
+      RESTORE [:sin-errores (assoc amb 5 0)]
       LIST (mostrar-listado (first amb))
       END [nil amb]
       (if (= (second sentencia) '=)
