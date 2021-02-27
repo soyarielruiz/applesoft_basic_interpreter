@@ -1063,7 +1063,9 @@
 (defn recorrer-para-imprimir [items]
   (remove nil?
     (map (fn [value]
-       (imprimir-segun-tipo value)
+           (if
+             (not= value 'DATA) (imprimir-segun-tipo value)
+           )
        ) items
     )
   )
@@ -1071,7 +1073,7 @@
 
 (defn devolver-contenido [linea]
   (cond
-     (= (first (second linea)) 'DATA) (recorrer-para-imprimir (rest (first (rest linea))))
+     (= (first (second linea)) 'DATA) (recorrer-para-imprimir (take-while (fn [x] (not= x 'REM)) (flatten (rest linea))))
   )
 )
 
@@ -1080,7 +1082,7 @@
     (empty? (first prg)) '()
     :else (apply concat (remove nil?
           (map (fn[value]
-            (devolver-contenido value)
+                   (devolver-contenido value)
             ) prg
           )
       ))
