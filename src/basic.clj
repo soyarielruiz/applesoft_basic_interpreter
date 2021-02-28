@@ -156,8 +156,9 @@
     176 "?STRING TOO LONG ERROR"
     200 "?LOAD WITHIN PROGRAM ERROR"
     201 "?SAVE WITHIN PROGRAM ERROR"
-    cod)
+    cod
   )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; seleccionar-destino-de-on: recibe una lista de numeros
@@ -279,7 +280,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn continuar-programa [amb]
   (ejecutar-programa amb (buscar-lineas-restantes amb))
-  )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; ejecutar-programa: recibe un ambiente e inicia la ejecucion
@@ -607,6 +608,7 @@
       RESTORE [:sin-errores (assoc amb 5 0)]
       LIST (mostrar-listado (first amb))
       END [nil amb]
+      EXIT [nil amb]
       (if (= (second sentencia) '=)
         (let [resu (ejecutar-asignacion sentencia amb)]
           (if (nil? resu)
@@ -636,8 +638,8 @@
        LEN (count operando)
        STR$ (if (not (number? operando)) (dar-error 163 nro-linea) (eliminar-cero-entero operando)) ; Type mismatch error
        CHR$ (if (or (< operando 0) (> operando 255)) (dar-error 53 nro-linea) (str (char operando)))
-       SIN (if (not (number? operando)) (dar-error 163 nro-linea) (Math/sin operando))
-       ATN (if (not (number? operando)) (dar-error 163 nro-linea) (Math/atan operando))
+       SIN (if (not (number? operando)) (dar-error 163 nro-linea) (float (Math/sin operando)))
+       ATN (if (not (number? operando)) (dar-error 163 nro-linea) (float (Math/atan operando)))
        INT (if (not (number? operando)) (dar-error 163 nro-linea) (int operando))
        ASC (if (not (string? operando)) (dar-error 163 nro-linea) (int (first operando)))
        )
@@ -858,7 +860,6 @@
     )
   )
 )
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; variable-float?: predicado para determinar si un identificador
 ; es una variable de punto flotante, por ejemplo:
@@ -1278,23 +1279,14 @@
 ; user=> (eliminar-cero-decimal 'A)
 ; A
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn transform-number [n]
-  (if (zero? (- (Float/parseFloat n) (int (Math/floor (Float/parseFloat n)))))
-      (parse-int n)
-    (Float/parseFloat n)
-  )
+(defn change-zeros [n]
+  (if (zero? (- n (int n))) (int n) n )
 )
 
 (defn eliminar-cero-decimal [n]
   (cond
-    (nil? n) nil
     (and (symbol? n) (or (variable-integer? n) (variable-float? n) (variable-string? n))) n
-    (string? n) n
-    (float? n) (transform-number (clojure.string/replace (str n) #".0" ""))
-    (integer? n) n
-    (zero? n) (str n)
-    (> n 1) (read-string (apply str (seq (str n))))
-    (and (> n 0) (< n 1)) (Float/parseFloat (apply str (nthrest (seq (str n)) 1)))
+    (number? n) (change-zeros n)
     :else n
   )
 )
@@ -1329,6 +1321,7 @@
     (integer? n) (str n)
     (and (symbol? n) (variable-string? n)) (str n)
     (and (float? n) (not (nil? (re-find #"[+-]?0.*" (str n))))) (clojure.string/replace (str n) #"0." ".")
+    (ratio? n) (str (float n))
     :else (str n)
   )
 )
